@@ -4,12 +4,8 @@ import { getFirefoxProfiles } from "./lib/firefox";
 import { getChromiumProfiles } from "./lib/chromium";
 import { launchBrowser } from "./lib/browsers";
 
-interface Preference {
-  "browsers.filter": string;
-}
-
 export default function Command() {
-  const preferences = getPreferenceValues<Preference>();
+  const preferences = getPreferenceValues();
   const enabledBrowsers = preferences["browsers.filter"].split(",");
 
   const chromiumProfiles = getChromiumProfiles(enabledBrowsers);

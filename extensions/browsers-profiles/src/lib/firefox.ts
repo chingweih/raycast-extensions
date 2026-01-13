@@ -5,12 +5,7 @@ import { join } from "path";
 
 import browsers from "./supported-browsers.json";
 import { sortProfiles, isBrowserEnabled } from "./utils";
-import { BrowserProfile } from "./types";
-
-type BrowserProfiles = {
-  name: string;
-  profiles: BrowserProfile[];
-};
+import { BrowserProfile, BrowserProfiles } from "./types";
 
 export const getFirefoxProfiles = (filter: string[]) => {
   const profiles: BrowserProfiles[] = [];
@@ -42,8 +37,6 @@ export const getFirefoxProfiles = (filter: string[]) => {
           path: profile.Name,
           name: profile.Name,
           icon: browser.icon,
-          label: profile.Name,
-          uid: profile.Name,
         });
       });
 

@@ -1,88 +1,41 @@
 import fs from "fs";
 import os from "os";
+import { join } from "path";
 
 import browsers from "./supported-browsers.json";
 import { sortProfiles, isBrowserEnabled } from "./utils";
-import { BrowserProfile } from "./types";
+import { BrowserProfile, BrowserProfiles } from "./types";
 
-type BrowserProfiles = {
-  name: string;
-  profiles: BrowserProfile[];
+const readLocalState = (path: string) => {
+  try {
+    return JSON.parse(fs.readFileSync(path, "utf-8"));
+  } catch {
+    return null;
+  }
 };
 
-export const getChromiumProfiles = (filter: string[]) => {
-  const profiles: BrowserProfiles[] = [];
+export const getChromiumProfiles = (filter: string[]): BrowserProfiles[] => {
+  return browsers.chromium
+    .filter((browser) => isBrowserEnabled(filter, browser))
+    .map((browser) => {
+      const basePath = join(os.homedir(), browser.path);
+      const localState = readLocalState(join(basePath, "Local State"));
+      const infoCache = localState?.profile?.info_cache as Record<string, { name: string }> | undefined;
 
-  browsers.chromium.forEach((browser) => {
-    if (!isBrowserEnabled(filter, browser)) {
-      return null;
-    }
+      if (!infoCache) return null;
 
-    const path = `${os.homedir()}${browser.path}`;
-    const exists = fs.existsSync(path);
-
-    if (!exists) {
-      return null;
-    }
-
-    const localStatePath = `${path}/Local State`;
-    const localStateExists = fs.existsSync(localStatePath);
-
-    if (!localStateExists) {
-      return null;
-    }
-
-    let localState;
-    try {
-      const localStateFile = fs.readFileSync(localStatePath, "utf-8");
-      localState = JSON.parse(localStateFile);
-    } catch (error) {
-      return null;
-    }
-
-    const infoCacheData = localState?.profile?.info_cache as
-      | Record<
-          string,
-          {
-            name: string;
-          }
-        >
-      | undefined;
-
-    if (!infoCacheData) {
-      return null;
-    }
-
-    const directories = fs.readdirSync(path);
-
-    const browserProfiles: BrowserProfile[] = [];
-
-    directories.forEach((directory: string) => {
-      const preferences = `${path}/${directory}/Preferences`;
-      const file = fs.readFileSync(preferences, "utf-8");
-      const profile = JSON.parse(file);
-      const profileName = profile.profile.name;
-      const profileLabel = infoCacheData[directory]?.name || profileName;
-
-      browserProfiles.push({
+      const profiles: BrowserProfile[] = Object.entries(infoCache).map(([profileDir, { name }]) => ({
         type: browser.type,
         browser: browser.title,
         app: browser.app,
-        path: directory,
-        name: profileName,
-        uid: directory,
-        label: profileLabel,
+        path: profileDir,
+        name,
         icon: browser.icon,
-      });
-    });
+      }));
 
-    sortProfiles(browserProfiles);
+      sortProfiles(profiles);
 
-    profiles.push({
-      name: browser.title,
-      profiles: browserProfiles,
-    });
-  });
-
-  return profiles;
+      return { name: browser.title, profiles };
+    })
+    .filter((result): result is BrowserProfiles => result !== null);
 };

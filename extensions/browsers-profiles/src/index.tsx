@@ -4,8 +4,12 @@ import { getFirefoxProfiles } from "./lib/firefox";
 import { getChromiumProfiles } from "./lib/chromium";
 import { launchBrowser } from "./lib/browsers";
 
+interface Preference {
+  "browsers.filter": string;
+}
+
 export default function Command() {
-  const preferences = getPreferenceValues();
+  const preferences = getPreferenceValues<Preference>();
   const enabledBrowsers = preferences["browsers.filter"].split(",");
 
   const chromiumProfiles = getChromiumProfiles(enabledBrowsers);
@@ -21,7 +25,7 @@ export default function Command() {
             <List.Item
               key={`browser-profile-${pindex}`}
               icon={{ source: `icons/${profile.icon}` }}
-              title={profile.label}
+              title={profile.name}
               accessories={[{ text: "Launch this profile", icon: Icon.Globe }]}
               actions={
                 <ActionPanel>

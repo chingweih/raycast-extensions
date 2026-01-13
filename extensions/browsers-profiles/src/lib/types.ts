@@ -4,9 +4,7 @@ export type BrowserProfile = {
   app: string;
   path: string;
   name: string;
-  label: string;
   icon: string;
-  uid: string;
 };
 
 export type Browser = {
@@ -15,4 +13,9 @@ export type Browser = {
   path: string;
   icon: string;
   title: string;
+};
+
+export type BrowserProfiles = {
+  name: string;
+  profiles: BrowserProfile[];
 };
